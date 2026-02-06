@@ -1,6 +1,5 @@
 """Generate training data for receipt data extraction via VLM teacher."""
 
-import asyncio
 import sys
 from pathlib import Path
 
@@ -13,7 +12,7 @@ OUTPUT_PATH = "/tmp/tinker-datasets/receipt_extraction.jsonl"
 
 
 def main():
-    print(f"Receipt data extraction data generation")
+    print("Receipt data extraction data generation")
     print(f"Config: {CONFIG.name}, output format: {CONFIG.output_format}")
     print(f"Data source: {CONFIG.data_source}")
     print()

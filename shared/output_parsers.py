@@ -14,7 +14,7 @@ def parse_single_label(response: str, labels: list[str], regex: str | None = Non
         match = re.search(regex, response)
         if match:
             candidate = match.group(1).strip().lower()
-            if candidate in [l.lower() for l in labels]:
+            if candidate in [lab.lower() for lab in labels]:
                 return candidate
 
     # Fallback: look for any label appearing in the response

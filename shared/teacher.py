@@ -4,7 +4,6 @@ Follows the pattern from tinker_cookbook/recipes/prompt_distillation/create_data
 uses sampling_client.sample_async() with tqdm_asyncio.as_completed.
 """
 
-import asyncio
 import json
 import os
 import re

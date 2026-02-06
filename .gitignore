@@ -10,3 +10,4 @@ build/
 *.jsonl
 !**/sample_data/*.jsonl
 /tmp/
+tinker-cookbook/

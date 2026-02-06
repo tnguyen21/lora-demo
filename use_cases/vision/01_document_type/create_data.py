@@ -4,14 +4,12 @@ For the vision use case, this script loads images from a HuggingFace dataset
 (RVL-CDIP subset) and uses a VLM teacher to label them.
 """
 
-import asyncio
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from shared.import_utils import load_config
-from shared.teacher import generate_teacher_labels
 
 CONFIG = load_config(__file__)
 OUTPUT_PATH = "/tmp/tinker-datasets/document_type.jsonl"
@@ -20,7 +18,7 @@ OUTPUT_PATH = "/tmp/tinker-datasets/document_type.jsonl"
 def main():
     # For vision, we'd typically load images from a HF dataset.
     # This script demonstrates the pattern — in practice, replace with actual image paths.
-    print(f"Document type classification data generation")
+    print("Document type classification data generation")
     print(f"Config: {CONFIG.name}, labels: {CONFIG.labels}")
     print(f"Data source: {CONFIG.data_source}")
     print()

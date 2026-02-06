@@ -1,6 +1,5 @@
 """Unit tests for shared modules (no API access needed)."""
 
-import json
 import os
 import tempfile
 
@@ -110,7 +109,7 @@ class TestOutputParsers:
         assert result == {"key": "value"}
 
     def test_parse_json_output_code_block(self):
-        response = "Here is the result:\n```json\n{\"key\": \"value\"}\n```\nDone."
+        response = 'Here is the result:\n```json\n{"key": "value"}\n```\nDone.'
         result = parse_json_output(response)
         assert result == {"key": "value"}
 

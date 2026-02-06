@@ -74,11 +74,9 @@ def compute_cost_comparison(config: UseCaseConfig) -> str:
     # Token counts
     lines.append("\n## Token Counts Per Request")
     lines.append(f"{'':40s} {'Input':>10s} {'Output':>10s}")
-    lines.append(f"{'-'*40} {'-'*10} {'-'*10}")
+    lines.append(f"{'-' * 40} {'-' * 10} {'-' * 10}")
     lines.append(
-        f"{'Teacher prompt (API models)':40s} "
-        f"{'~' + str(config.teacher_input_tokens):>10s} "
-        f"{'~' + str(config.teacher_output_tokens):>10s}"
+        f"{'Teacher prompt (API models)':40s} {'~' + str(config.teacher_input_tokens):>10s} {'~' + str(config.teacher_output_tokens):>10s}"
     )
     lines.append(
         f"{'Distilled (fine-tuned, no prompt)':40s} "
@@ -142,7 +140,7 @@ def compute_cost_comparison(config: UseCaseConfig) -> str:
     if best_small_cpr > 0:
         lines.append(f"    {frontier_cpr / best_small_cpr:.1f}x cheaper per request")
     lines.append(f"    At 100K req/day: save {format_usd((frontier_cpr - best_small_cpr) * 100_000)}/day")
-    lines.append(f"\n  Fine-tuned on Tinker:")
+    lines.append("\n  Fine-tuned on Tinker:")
     if tinker_cpr > 0:
         lines.append(f"    {frontier_cpr / tinker_cpr:.0f}x cheaper per request")
     lines.append(f"    At 100K req/day: save {format_usd((frontier_cpr - tinker_cpr) * 100_000)}/day")

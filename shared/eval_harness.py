@@ -163,7 +163,7 @@ async def run_comparison_eval(
 
     # 3. Fine-tuned student (no prompt)
     if checkpoint_path:
-        print(f"\nEvaluating: Fine-tuned student (checkpoint, raw input only)")
+        print("\nEvaluating: Fine-tuned student (checkpoint, raw input only)")
         student_metrics = await _evaluate_model(
             config=config,
             test_data=test_data,
