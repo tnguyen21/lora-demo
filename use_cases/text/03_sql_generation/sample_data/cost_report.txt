@@ -1,0 +1,48 @@
+========================================================================
+SQL GENERATION: TOKEN & COST COMPARISON
+========================================================================
+
+## Token Counts Per Request
+                                              Input     Output
+---------------------------------------- ---------- ----------
+Teacher prompt (API models)                    ~800        ~60
+Distilled (fine-tuned, no prompt)               ~80        ~40
+
+  -> Input token reduction: 10x
+
+## Cost Per Request
+Model                                Approach      Input tok Output tok     Cost/req
+------------------------------------------------------------------------------------
+GPT-5.2 (frontier)                   teacher             800         60      $0.0022
+GPT-4.1-mini (small)                 teacher             800         60    $0.000416
+Gemini 2.5 Flash (small)             teacher             800         60    $0.000390
+Claude Haiku 4.5 (small)             teacher             800         60      $0.0011
+Tinker LoRA (self-hosted)            distilled            80         40    $0.000012
+
+## Daily Cost by Volume (requests/day)
+Model                                      1K/day      10K/day     100K/day       1M/day
+----------------------------------------------------------------------------------------
+GPT-5.2 (frontier)                          $2.24       $22.40         $224       $2,240
+GPT-4.1-mini (small)                       $0.416        $4.16       $41.60         $416
+Gemini 2.5 Flash (small)                   $0.390        $3.90       $39.00         $390
+Claude Haiku 4.5 (small)                    $1.10       $11.00         $110       $1,100
+Tinker LoRA (self-hosted)                  $0.012       $0.120        $1.20       $12.00
+
+## Monthly Cost (30 days)
+Model                                      1K/day      10K/day     100K/day       1M/day
+----------------------------------------------------------------------------------------
+GPT-5.2 (frontier)                         $67.20         $672       $6,720      $67,200
+GPT-4.1-mini (small)                       $12.48         $125       $1,248      $12,480
+Gemini 2.5 Flash (small)                   $11.70         $117       $1,170      $11,700
+Claude Haiku 4.5 (small)                   $33.00         $330       $3,300      $33,000
+Tinker LoRA (self-hosted)                  $0.360        $3.60       $36.00         $360
+
+## Savings vs Frontier (GPT-5.2 (frontier))
+  Best small API model (Gemini 2.5 Flash (small)):
+    5.7x cheaper per request
+    At 100K req/day: save $185/day
+
+  Fine-tuned on Tinker:
+    187x cheaper per request
+    At 100K req/day: save $223/day
+

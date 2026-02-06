@@ -1,0 +1,15 @@
+{"messages": [{"role": "user", "content": "I was double-charged on my last invoice for the Pro plan. Can you refund the extra charge?"}, {"role": "assistant", "content": "billing"}]}
+{"messages": [{"role": "user", "content": "My API calls are returning 500 errors since the last update. Here are the logs."}, {"role": "assistant", "content": "technical"}]}
+{"messages": [{"role": "user", "content": "I can't log into my account. It says my password is incorrect but I just changed it yesterday."}, {"role": "assistant", "content": "account"}]}
+{"messages": [{"role": "user", "content": "Do you have any plans to add a dark mode to the dashboard?"}, {"role": "assistant", "content": "general"}]}
+{"messages": [{"role": "user", "content": "I need to upgrade from the Starter plan to Enterprise. What's the pricing?"}, {"role": "assistant", "content": "billing"}]}
+{"messages": [{"role": "user", "content": "The export feature is broken — it generates empty CSV files every time I try."}, {"role": "assistant", "content": "technical"}]}
+{"messages": [{"role": "user", "content": "I want to add a new team member to our organization but can't find the invite button."}, {"role": "assistant", "content": "account"}]}
+{"messages": [{"role": "user", "content": "How do I set up the webhook integration with Slack?"}, {"role": "assistant", "content": "general"}]}
+{"messages": [{"role": "user", "content": "Please cancel my subscription effective immediately and process a prorated refund."}, {"role": "assistant", "content": "billing"}]}
+{"messages": [{"role": "user", "content": "The search function takes 30+ seconds to return results. It used to be instant."}, {"role": "assistant", "content": "technical"}]}
+{"messages": [{"role": "user", "content": "I need to update the billing email address on our account."}, {"role": "assistant", "content": "account"}]}
+{"messages": [{"role": "user", "content": "We're seeing intermittent timeout errors on the /v2/users endpoint."}, {"role": "assistant", "content": "technical"}]}
+{"messages": [{"role": "user", "content": "Can you help me understand the difference between the Team and Business plans?"}, {"role": "assistant", "content": "general"}]}
+{"messages": [{"role": "user", "content": "I accidentally deleted my project. Is there a way to recover it?"}, {"role": "assistant", "content": "account"}]}
+{"messages": [{"role": "user", "content": "Our SSO integration with Okta stopped working after your maintenance window."}, {"role": "assistant", "content": "technical"}]}

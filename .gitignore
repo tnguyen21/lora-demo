@@ -8,5 +8,5 @@ build/
 .ruff_cache/
 .env
 *.jsonl
-!sample_data/*.jsonl
+!**/sample_data/*.jsonl
 /tmp/
