@@ -1,0 +1,34 @@
+[project]
+name = "lora-demo"
+version = "0.1.0"
+description = "Workshop: Fine-tuning small models as fuzzy decision trees"
+requires-python = ">=3.12"
+dependencies = [
+    "tinker-cookbook",
+    "tinker>=0.9.0",
+    "tiktoken>=0.12.0",
+    "tqdm",
+    "numpy",
+    "pillow",
+    "rich",
+    "chz",
+    "datasets",
+    "transformers>=4.57.6,<5.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0.2",
+    "pytest-asyncio",
+    "ruff",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 144
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
