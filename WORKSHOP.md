@@ -326,6 +326,23 @@ Concrete use cases where fine-tuning a small model beats prompting a large one. 
 - **What about model drift?** Your fine-tuned model is frozen — it won't degrade over time like a prompted model might if the API provider updates weights.
 - **Can you iterate?** Yes — generate more data for failure cases, retrain. The loop is fast.
 
+## Deployment Options: Tinker vs Self-Hosted
+
+| Path | Engineering Effort | Cost Profile | Best For |
+| --- | --- | --- | --- |
+| Tinker API (direct checkpoint) | Minimal | Per-token, scales linearly | Prototyping, low-mid volume |
+| Tinker + API wrapper (FastAPI) | Low | Per-token + server cost | Mid volume, custom API |
+| Self-hosted (vLLM / TGI) | High | Fixed GPU cost, amortized | High volume, cost-sensitive |
+
+Self-hosting is the most engineering-heavy option: you download weights, merge the LoRA adapter into the base model, provision GPU infra, and manage your own serving stack. But after a certain request volume, the economics flip: a single GPU running your merged model serves millions of req/day at a fixed cost, while per-token pricing scales linearly. The crossover point depends on your volume and GPU costs — at ~100K+ req/day it's often worth investigating. Tinker makes the on-ramp easy: train on Tinker, download weights, self-host when ready. See `docs/DEPLOYMENT.md` for the hosted path.
+
+Brief workflow (worked example in `use_cases/text/01_ticket_routing/`):
+
+1. Download weights: `download_weights.py`
+2. Merge adapter into base model: `self_host.py merge`
+3. Serve with vLLM: `vllm serve ./merged-model --max-model-len 2048`
+4. Call via OpenAI-compatible API: `self_host.py test`
+
 ---
 
 ## Worked Use Cases

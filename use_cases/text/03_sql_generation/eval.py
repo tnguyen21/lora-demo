@@ -2,6 +2,7 @@
 
 import argparse
 import asyncio
+import os
 import sys
 from pathlib import Path
 
@@ -14,7 +15,13 @@ CONFIG = load_config(__file__)
 TEST_DATA_PATH = "/tmp/tinker-datasets/sql_generation_test.jsonl"
 
 
+def ensure_test_data() -> None:
+    if not os.path.exists(TEST_DATA_PATH):
+        raise FileNotFoundError(f"Missing test data at {TEST_DATA_PATH}. Run create_data.py to generate train/test splits.")
+
+
 def main(checkpoint_path: str | None = None):
+    ensure_test_data()
     return asyncio.run(
         run_comparison_eval(
             config=CONFIG,

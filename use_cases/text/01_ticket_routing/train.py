@@ -25,11 +25,11 @@ def main():
         raise FileNotFoundError(f"Training data not found: {DATA_PATH}\nRun create_data.py first.")
 
     model_name_slug = CONFIG.student_model.replace("/", "-")
-    date_str = datetime.now().strftime("%Y-%m-%d-%H-%M")
+    date_str = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     run_name = f"ticket_routing-{model_name_slug}-{CONFIG.lora_rank}rank-{CONFIG.learning_rate}lr-{CONFIG.batch_size}batch-{date_str}"
     log_path = f"/tmp/tinker-cookbook/ticket_routing/{run_name}"
 
-    cli_utils.check_log_dir(log_path, behavior_if_exists="ask")
+    cli_utils.check_log_dir(log_path, behavior_if_exists="delete")
 
     renderer_name = CONFIG.renderer_name or model_info.get_recommended_renderer_name(CONFIG.student_model)
 

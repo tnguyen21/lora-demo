@@ -30,6 +30,14 @@ python use_cases/text/01_ticket_routing/eval.py --checkpoint "tinker://<run-id>/
 
 # 4. View cost comparison (no API key needed)
 python use_cases/text/01_ticket_routing/cost_comparison.py
+
+# 5. Download LoRA weights
+python use_cases/text/01_ticket_routing/download_weights.py --checkpoint "tinker://<run-id>/sampler_weights/final"
+
+# 6. Self-host (merge + serve with vLLM)
+python use_cases/text/01_ticket_routing/self_host.py merge --adapter-dir /tmp/tinker-weights/ticket_routing
+python use_cases/text/01_ticket_routing/self_host.py serve --model-dir /tmp/tinker-merged/ticket_routing
+python use_cases/text/01_ticket_routing/self_host.py test
 ```
 
 ## Files
@@ -39,4 +47,6 @@ python use_cases/text/01_ticket_routing/cost_comparison.py
 - `train.py` — Fine-tune student model with LoRA
 - `eval.py` — 3-model comparison evaluation
 - `cost_comparison.py` — Cost analysis across model tiers
+- `download_weights.py` — Download LoRA adapter weights from Tinker
+- `self_host.py` — Merge, serve, and test a self-hosted model
 - `sample_data/` — Pre-generated examples and cost report
