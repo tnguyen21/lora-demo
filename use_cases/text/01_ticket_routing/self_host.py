@@ -28,19 +28,39 @@ TEST_CASES = [
 
 
 def load_merge_script():
+    import importlib.util
+
+    def load_from_path(script_path: Path):
+        spec = importlib.util.spec_from_file_location("tinker_merge_adapter_script", script_path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
     try:
         from tinker_cookbook.scripts import merge_tinker_adapter_to_hf_model
 
         return merge_tinker_adapter_to_hf_model
     except ModuleNotFoundError:
-        repo_root = Path(__file__).resolve().parents[3]
-        cookbook_root = repo_root / "tinker-cookbook"
-        if cookbook_root.exists():
-            sys.path.insert(0, str(cookbook_root))
-            from tinker_cookbook.scripts import merge_tinker_adapter_to_hf_model
+        pass
 
-            return merge_tinker_adapter_to_hf_model
-        raise
+    try:
+        import tinker_cookbook
+
+        package_root = Path(tinker_cookbook.__file__).resolve().parent
+        script_path = package_root / "scripts" / "merge_tinker_adapter_to_hf_model.py"
+        if script_path.exists():
+            return load_from_path(script_path)
+    except ModuleNotFoundError:
+        pass
+
+    repo_root = Path(__file__).resolve().parents[3]
+    script_path = repo_root / "tinker-cookbook" / "tinker_cookbook" / "scripts" / "merge_tinker_adapter_to_hf_model.py"
+    if script_path.exists():
+        return load_from_path(script_path)
+
+    raise ModuleNotFoundError(
+        "Could not locate merge_tinker_adapter_to_hf_model.py. Install tinker-cookbook or clone it into ./tinker-cookbook."
+    )
 
 
 def validate_adapter_dir(adapter_dir: Path) -> None:
