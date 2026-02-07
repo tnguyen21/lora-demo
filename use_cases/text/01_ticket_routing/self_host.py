@@ -37,30 +37,18 @@ def load_merge_script():
         return module
 
     try:
-        from tinker_cookbook.scripts import merge_tinker_adapter_to_hf_model
-
-        return merge_tinker_adapter_to_hf_model
-    except ModuleNotFoundError:
-        pass
-
-    try:
         import tinker_cookbook
 
         package_root = Path(tinker_cookbook.__file__).resolve().parent
         script_path = package_root / "scripts" / "merge_tinker_adapter_to_hf_model.py"
         if script_path.exists():
             return load_from_path(script_path)
-    except ModuleNotFoundError:
-        pass
+    except ModuleNotFoundError as exc:
+        raise ModuleNotFoundError(
+            "tinker-cookbook is not installed. Install it with `pip install tinker-cookbook` or `uv add tinker-cookbook`."
+        ) from exc
 
-    repo_root = Path(__file__).resolve().parents[3]
-    script_path = repo_root / "tinker-cookbook" / "tinker_cookbook" / "scripts" / "merge_tinker_adapter_to_hf_model.py"
-    if script_path.exists():
-        return load_from_path(script_path)
-
-    raise ModuleNotFoundError(
-        "Could not locate merge_tinker_adapter_to_hf_model.py. Install tinker-cookbook or clone it into ./tinker-cookbook."
-    )
+    raise FileNotFoundError("merge_tinker_adapter_to_hf_model.py not found in the installed tinker-cookbook package. Try upgrading it.")
 
 
 def validate_adapter_dir(adapter_dir: Path) -> None:
