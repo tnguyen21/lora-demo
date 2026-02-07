@@ -5,6 +5,7 @@ import json
 import os
 import re
 import sys
+import subprocess
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -141,25 +142,57 @@ def merge_adapter(adapter_dir: Path, output_dir: Path) -> None:
     log(f"Merged model saved to {output_dir}")
 
 
-def print_serve_commands(model_dir: Path, adapter_dir: Path | None) -> None:
-    merged_cmd = f"vllm serve {model_dir} --served-model-name {DEFAULT_MODEL} --max-model-len 2048 --dtype bfloat16"
-
-    print("Merged model serving command (vLLM):")
-    print(merged_cmd)
-    print()
+def serve_model(model_dir: Path, adapter_dir: Path | None, mode: str, print_only: bool) -> None:
+    merged_cmd = [
+        "vllm",
+        "serve",
+        str(model_dir),
+        "--served-model-name",
+        DEFAULT_MODEL,
+        "--max-model-len",
+        "2048",
+        "--dtype",
+        "bfloat16",
+    ]
 
     adapter_dir_display = adapter_dir if adapter_dir else "<adapter-dir>"
-    lora_cmd = (
-        f"vllm serve {CONFIG.student_model} "
-        "--enable-lora "
-        f"--lora-modules ticket_routing={adapter_dir_display} "
-        f"--served-model-name {DEFAULT_MODEL} "
-        "--max-model-len 2048 "
-        "--dtype bfloat16"
-    )
+    lora_cmd = [
+        "vllm",
+        "serve",
+        CONFIG.student_model,
+        "--enable-lora",
+        "--lora-modules",
+        f"ticket_routing={adapter_dir_display}",
+        "--served-model-name",
+        DEFAULT_MODEL,
+        "--max-model-len",
+        "2048",
+        "--dtype",
+        "bfloat16",
+    ]
 
+    if mode == "merged":
+        cmd = merged_cmd
+    elif mode == "lora":
+        if not adapter_dir:
+            raise ValueError("--adapter-dir is required when --mode lora is selected.")
+        cmd = lora_cmd
+    else:
+        raise ValueError(f"Unknown serve mode: {mode}")
+
+    print("Merged model serving command (vLLM):")
+    print(" ".join(merged_cmd))
+    print()
     print("Serve LoRA directly (no merge required):")
-    print(lora_cmd)
+    print(" ".join(lora_cmd))
+    print()
+    print("Launching vLLM server:")
+    print(" ".join(cmd))
+
+    if print_only:
+        return
+
+    subprocess.run(cmd, check=True)
 
 
 def extract_label(text: str) -> str:
@@ -230,6 +263,17 @@ def main() -> None:
         default=None,
         help="Optional adapter path for the LoRA serve command",
     )
+    serve_parser.add_argument(
+        "--mode",
+        choices=["merged", "lora"],
+        default="merged",
+        help="Which serving mode to launch (default: merged)",
+    )
+    serve_parser.add_argument(
+        "--print-only",
+        action="store_true",
+        help="Only print the command; do not start vLLM",
+    )
 
     test_parser = subparsers.add_parser("test", help="Send test requests")
     test_parser.add_argument(
@@ -249,7 +293,12 @@ def main() -> None:
         merge_adapter(Path(os.path.expanduser(args.adapter_dir)), Path(os.path.expanduser(args.output_dir)))
     elif args.command == "serve":
         adapter_dir = Path(os.path.expanduser(args.adapter_dir)) if args.adapter_dir else None
-        print_serve_commands(Path(os.path.expanduser(args.model_dir)), adapter_dir)
+        serve_model(
+            Path(os.path.expanduser(args.model_dir)),
+            adapter_dir,
+            mode=args.mode,
+            print_only=args.print_only,
+        )
     elif args.command == "test":
         test_server(args.url, args.model)
 
