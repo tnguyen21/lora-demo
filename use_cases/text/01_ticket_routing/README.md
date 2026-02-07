@@ -35,7 +35,7 @@ python use_cases/text/01_ticket_routing/cost_comparison.py
 python use_cases/text/01_ticket_routing/download_weights.py --checkpoint "tinker://<run-id>/sampler_weights/final"
 
 # 6. Self-host (merge + serve with vLLM)
-# Requires tinker-cookbook installed on the host: pip install tinker-cookbook
+# Requires torch/safetensors/transformers on the host: pip install torch safetensors transformers
 python use_cases/text/01_ticket_routing/self_host.py merge --adapter-dir /tmp/tinker-weights/ticket_routing
 python use_cases/text/01_ticket_routing/self_host.py serve --model-dir /tmp/tinker-merged/ticket_routing
 python use_cases/text/01_ticket_routing/self_host.py test
