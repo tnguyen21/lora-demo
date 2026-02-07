@@ -96,11 +96,19 @@ If you're making 10K+ requests/day with a frontier model, fine-tuning pays for i
 
 ### Latency: the other half of the story
 
-Cost is only half the win. The fine-tuned model is also dramatically faster because:
+Cost is only half the win. The fine-tuned model is also dramatically faster because of how transformer inference works.
 
-- **Shorter input** — fewer tokens to process (prompt compression)
-- **Shorter output** — classification outputs 1 token vs 4
-- **Smaller effective model** — LoRA inference on the same base, but less work per token
+**Transformer inference has two phases:**
+
+1. **Prefill** — process all input tokens in parallel to build the KV cache. This is **compute-bound**: FLOPs scale with sequence length (quadratically for attention, linearly for FFN layers). More input tokens = more arithmetic.
+2. **Decode** — generate output tokens one at a time, autoregressively. This is **memory-bandwidth-bound**: each step loads the full model weights from GPU memory to produce a single token. Decode cost is roughly constant regardless of how long the input was.
+
+**Where the speedup comes from:** the teacher prompt is ~641 tokens (full rubric + input). The fine-tuned student prompt is ~24 tokens (just the raw input). That's a ~27x reduction in prefill work. Decode is nearly identical for both — same model architecture, same short output. The entire latency gap comes from prefill savings.
+
+| Phase | Teacher | Student | Bottleneck |
+| ------- | ------------------- | ---------------- | -------------- |
+| Prefill | ~641 tokens | ~24 tokens | Compute-bound (27x less work) |
+| Decode | ~4 output tokens | ~1 output token | Memory-bandwidth-bound (similar cost) |
 
 | Approach                              | p50 Latency | Speedup |
 | ------------------------------------- | ----------- | ------- |
@@ -347,13 +355,6 @@ The repo includes 6 fully-worked use cases, each with data generation, training,
 | --- | -------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------ |
 | 1   | **Document Type Classification** (live demo) | VLM classification        | [`use_cases/vision/01_document_type/`](use_cases/vision/01_document_type/)           |
 | 2   | **Receipt Data Extraction**                  | VLM structured extraction | [`use_cases/vision/02_receipt_extraction/`](use_cases/vision/02_receipt_extraction/) |
-
-### Bring Your Own Task
-
-Use the templates to create your own use case:
-
-- **Text classification:** [`templates/text_classification/`](templates/text_classification/)
-- **Vision classification:** [`templates/vision_classification/`](templates/vision_classification/)
 
 ### Additional Resources
 
