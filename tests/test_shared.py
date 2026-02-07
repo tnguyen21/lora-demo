@@ -27,6 +27,21 @@ class TestConfig:
         assert cfg.num_epochs == 4
         assert cfg.lora_rank == 32
         assert cfg.batch_size == 128
+        assert cfg.teacher_latency_ms is None
+        assert cfg.student_latency_ms is None
+
+    def test_latency_fields(self):
+        cfg = UseCaseConfig(
+            name="test",
+            display_name="Test",
+            labels=["a", "b"],
+            teacher_prompt="Classify: {input}",
+            output_format="single_label",
+            teacher_latency_ms=450.0,
+            student_latency_ms=35.0,
+        )
+        assert cfg.teacher_latency_ms == 450.0
+        assert cfg.student_latency_ms == 35.0
 
     def test_vision_config_defaults(self):
         cfg = VisionUseCaseConfig(
@@ -186,3 +201,41 @@ class TestCost:
         assert "Daily Cost" in report
         assert "Monthly Cost" in report
         assert "Savings" in report
+        # No latency section when fields are None
+        assert "Latency Per Request" not in report
+
+    def test_compute_cost_comparison_with_latency(self):
+        cfg = UseCaseConfig(
+            name="test",
+            display_name="Test Task",
+            category="text",
+            labels=["a", "b"],
+            teacher_prompt="test {input}",
+            output_format="single_label",
+            teacher_input_tokens=500,
+            student_input_tokens=25,
+            teacher_output_tokens=4,
+            student_output_tokens=1,
+            teacher_latency_ms=450.0,
+            student_latency_ms=35.0,
+        )
+        report = compute_cost_comparison(cfg)
+        assert "Latency Per Request" in report
+        assert "~450ms" in report
+        assert "~35ms" in report
+        assert "12.9x faster" in report
+
+    def test_compute_cost_comparison_teacher_latency_only(self):
+        cfg = UseCaseConfig(
+            name="test",
+            display_name="Test Task",
+            category="text",
+            labels=["a", "b"],
+            teacher_prompt="test {input}",
+            output_format="single_label",
+            teacher_latency_ms=450.0,
+        )
+        report = compute_cost_comparison(cfg)
+        assert "Latency Per Request" in report
+        assert "~450ms" in report
+        assert "faster" not in report

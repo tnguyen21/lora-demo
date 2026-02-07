@@ -35,6 +35,10 @@ class UseCaseConfig:
     teacher_output_tokens: int = 4
     student_output_tokens: int = 1
 
+    # measured latency (populated by benchmark_latency.py)
+    teacher_latency_ms: float | None = None
+    student_latency_ms: float | None = None
+
     # data
     synthetic_examples: int = 1000
     eval_samples: int = 200

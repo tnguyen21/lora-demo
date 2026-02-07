@@ -57,6 +57,24 @@ def main():
             f"| {savings} |"
         )
 
+    # Latency comparison (if any configs have latency data)
+    has_latency = any(cfg.teacher_latency_ms is not None or cfg.student_latency_ms is not None for cfg in configs)
+    if has_latency:
+        print()
+        print("## Latency Comparison")
+        print()
+        print("| Use Case | Teacher p50 | Student p50 | Speedup |")
+        print("|---|---|---|---|")
+
+        for cfg in configs:
+            teacher_ms = f"~{cfg.teacher_latency_ms:.0f}ms" if cfg.teacher_latency_ms is not None else "—"
+            student_ms = f"~{cfg.student_latency_ms:.0f}ms" if cfg.student_latency_ms is not None else "—"
+            if cfg.teacher_latency_ms and cfg.student_latency_ms:
+                speedup = f"~{cfg.teacher_latency_ms / cfg.student_latency_ms:.1f}x"
+            else:
+                speedup = "—"
+            print(f"| {cfg.display_name} | {teacher_ms} | {student_ms} | {speedup} |")
+
     print()
     print("## Monthly Cost at 100K requests/day")
     print()

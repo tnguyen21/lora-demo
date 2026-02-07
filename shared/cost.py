@@ -144,6 +144,19 @@ def compute_cost_comparison(config: UseCaseConfig) -> str:
     if tinker_cpr > 0:
         lines.append(f"    {frontier_cpr / tinker_cpr:.0f}x cheaper per request")
     lines.append(f"    At 100K req/day: save {format_usd((frontier_cpr - tinker_cpr) * 100_000)}/day")
+
+    # Latency comparison (only if measured)
+    if config.teacher_latency_ms is not None or config.student_latency_ms is not None:
+        lines.append("")
+        lines.append("## Latency Per Request")
+        if config.teacher_latency_ms is not None:
+            lines.append(f"  Teacher (full prompt):       ~{config.teacher_latency_ms:.0f}ms")
+        if config.student_latency_ms is not None:
+            lines.append(f"  Fine-tuned (no prompt):      ~{config.student_latency_ms:.0f}ms")
+        if config.teacher_latency_ms and config.student_latency_ms:
+            speedup = config.teacher_latency_ms / config.student_latency_ms
+            lines.append(f"    -> {speedup:.1f}x faster")
+
     lines.append("")
 
     return "\n".join(lines)
