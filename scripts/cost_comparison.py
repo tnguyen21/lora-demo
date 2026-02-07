@@ -100,6 +100,14 @@ MODELS = {
         "input_per_1m": 1.75,
         "output_per_1m": 14.00,
     },
+    "GPT-5 (frontier)": {
+        "input_per_1m": 1.25,
+        "output_per_1m": 10.00,
+    },
+    "Claude Opus 4.6 (frontier)": {
+        "input_per_1m": 5.00,
+        "output_per_1m": 25.00,
+    },
     "GPT-4.1-mini (small)": {
         "input_per_1m": 0.40,
         "output_per_1m": 1.60,

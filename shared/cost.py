@@ -11,6 +11,14 @@ MODELS = {
         "input_per_1m": 1.75,
         "output_per_1m": 14.00,
     },
+    "GPT-5 (frontier)": {
+        "input_per_1m": 1.25,
+        "output_per_1m": 10.00,
+    },
+    "Claude Opus 4.6 (frontier)": {
+        "input_per_1m": 5.00,
+        "output_per_1m": 25.00,
+    },
     "GPT-4.1-mini (small)": {
         "input_per_1m": 0.40,
         "output_per_1m": 1.60,
@@ -129,21 +137,21 @@ def compute_cost_comparison(config: UseCaseConfig) -> str:
             line += f" {format_usd(monthly):>12s}"
         lines.append(line)
 
-    # Savings summary
-    frontier_cpr = rows[0][4]
+    # Savings summary — compare most expensive frontier vs cheapest non-Tinker vs Tinker
+    non_tinker = [r for r in rows if "Tinker" not in r[0]]
     tinker_cpr = rows[-1][4]
-    best_small_cpr = min(r[4] for r in rows[1:-1])
-    best_small_name = [r[0] for r in rows[1:-1] if r[4] == best_small_cpr][0]
+    most_expensive = max(non_tinker, key=lambda r: r[4])
+    cheapest_api = min(non_tinker, key=lambda r: r[4])
 
-    lines.append(f"\n## Savings vs Frontier ({rows[0][0]})")
-    lines.append(f"  Best small API model ({best_small_name}):")
-    if best_small_cpr > 0:
-        lines.append(f"    {frontier_cpr / best_small_cpr:.1f}x cheaper per request")
-    lines.append(f"    At 100K req/day: save {format_usd((frontier_cpr - best_small_cpr) * 100_000)}/day")
+    lines.append(f"\n## Savings vs Most Expensive ({most_expensive[0]})")
+    lines.append(f"  Cheapest API model ({cheapest_api[0]}):")
+    if cheapest_api[4] > 0:
+        lines.append(f"    {most_expensive[4] / cheapest_api[4]:.1f}x cheaper per request")
+    lines.append(f"    At 100K req/day: save {format_usd((most_expensive[4] - cheapest_api[4]) * 100_000)}/day")
     lines.append("\n  Fine-tuned on Tinker:")
     if tinker_cpr > 0:
-        lines.append(f"    {frontier_cpr / tinker_cpr:.0f}x cheaper per request")
-    lines.append(f"    At 100K req/day: save {format_usd((frontier_cpr - tinker_cpr) * 100_000)}/day")
+        lines.append(f"    {most_expensive[4] / tinker_cpr:.0f}x cheaper per request")
+    lines.append(f"    At 100K req/day: save {format_usd((most_expensive[4] - tinker_cpr) * 100_000)}/day")
 
     # Latency comparison (only if measured)
     if config.teacher_latency_ms is not None or config.student_latency_ms is not None:
