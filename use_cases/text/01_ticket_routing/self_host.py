@@ -5,6 +5,7 @@ import json
 import os
 import re
 import sys
+import subprocess
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -27,28 +28,19 @@ TEST_CASES = [
 ]
 
 
-def load_merge_script():
-    import importlib.util
-
-    def load_from_path(script_path: Path):
-        spec = importlib.util.spec_from_file_location("tinker_merge_adapter_script", script_path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        return module
-
+def get_merge_script_path() -> Path:
     try:
         import tinker_cookbook
-
-        package_root = Path(tinker_cookbook.__file__).resolve().parent
-        script_path = package_root / "scripts" / "merge_tinker_adapter_to_hf_model.py"
-        if script_path.exists():
-            return load_from_path(script_path)
     except ModuleNotFoundError as exc:
         raise ModuleNotFoundError(
             "tinker-cookbook is not installed. Install it with `pip install tinker-cookbook` or `uv add tinker-cookbook`."
         ) from exc
 
-    raise FileNotFoundError("merge_tinker_adapter_to_hf_model.py not found in the installed tinker-cookbook package. Try upgrading it.")
+    package_root = Path(tinker_cookbook.__file__).resolve().parent
+    script_path = package_root / "scripts" / "merge_tinker_adapter_to_hf_model.py"
+    if not script_path.exists():
+        raise FileNotFoundError("merge_tinker_adapter_to_hf_model.py not found in the installed tinker-cookbook package. Try upgrading it.")
+    return script_path
 
 
 def validate_adapter_dir(adapter_dir: Path) -> None:
@@ -64,22 +56,20 @@ def merge_adapter(adapter_dir: Path, output_dir: Path) -> None:
         raise FileExistsError(f"Output dir {output_dir} already exists and is not empty.")
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    merge_script = load_merge_script()
-
-    merge_script.log("Loading HF Model")
-    hf_model = merge_script.load_model(CONFIG.student_model)
-
-    merge_script.log("Loading Adapter Weights")
-    adapter_weights, adapter_config = merge_script.load_adapter_weights(str(adapter_dir))
-
-    merge_script.log("Merging Adapter Weights")
-    merge_script.merge_adapter_weights(hf_model, adapter_weights, adapter_config)
-
-    merge_script.log("Saving Merged Model")
-    hf_model.save_pretrained(str(output_dir))
-    tokenizer = merge_script.AutoTokenizer.from_pretrained(CONFIG.student_model)
-    tokenizer.save_pretrained(str(output_dir))
-    merge_script.log(f"Merged model saved to {output_dir}")
+    script_path = get_merge_script_path()
+    cmd = [
+        sys.executable,
+        str(script_path),
+        "--hf-model",
+        CONFIG.student_model,
+        "--tinker-adapter-path",
+        str(adapter_dir),
+        "--output-path",
+        str(output_dir),
+    ]
+    print("Running merge script:")
+    print(" ".join(cmd))
+    subprocess.run(cmd, check=True)
 
 
 def print_serve_commands(model_dir: Path, adapter_dir: Path | None) -> None:
