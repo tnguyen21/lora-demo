@@ -20,25 +20,29 @@ Route incoming customer support tickets to the correct team. This is the **live 
 
 ```bash
 # 1. Generate training data (requires TINKER_API_KEY)
-python use_cases/text/01_ticket_routing/create_data.py
+uv run python use_cases/text/01_ticket_routing/create_data.py
 
 # 2. Fine-tune the student model
-python use_cases/text/01_ticket_routing/train.py
+uv run python use_cases/text/01_ticket_routing/train.py
 
 # 3. Evaluate (optionally pass --checkpoint for fine-tuned model)
-python use_cases/text/01_ticket_routing/eval.py --checkpoint "tinker://<run-id>/sampler_weights/final"
+uv run python use_cases/text/01_ticket_routing/eval.py --checkpoint "tinker://<run-id>/sampler_weights/final"
 
 # 4. View cost comparison (no API key needed)
-python use_cases/text/01_ticket_routing/cost_comparison.py
+uv run python use_cases/text/01_ticket_routing/cost_comparison.py
 
 # 5. Download LoRA weights
-python use_cases/text/01_ticket_routing/download_weights.py --checkpoint "tinker://<run-id>/sampler_weights/final"
+uv run python use_cases/text/01_ticket_routing/download_weights.py --checkpoint "tinker://<run-id>/sampler_weights/final"
 
-# 6. Self-host (merge + serve with vLLM)
+# 6. Self-host (serve LoRA directly with vLLM)
 # Requires torch/safetensors/transformers on the host: pip install torch safetensors transformers
-python use_cases/text/01_ticket_routing/self_host.py merge --adapter-dir /tmp/tinker-weights/ticket_routing
-python use_cases/text/01_ticket_routing/self_host.py serve --model-dir /tmp/tinker-merged/ticket_routing
-python use_cases/text/01_ticket_routing/self_host.py test
+uv run python use_cases/text/01_ticket_routing/self_host.py serve --mode lora --adapter-dir /tmp/tinker-weights/ticket_routing
+# In another shell:
+uv run python use_cases/text/01_ticket_routing/self_host.py test
+
+# (Optional) Merge LoRA into the base model instead
+uv run python use_cases/text/01_ticket_routing/self_host.py merge --adapter-dir /tmp/tinker-weights/ticket_routing
+uv run python use_cases/text/01_ticket_routing/self_host.py serve --model-dir /tmp/tinker-merged/ticket_routing
 ```
 
 ## Files
