@@ -66,7 +66,10 @@ def parse_free_text(response: str, regex: str | None = None) -> str | None:
     if regex:
         match = re.search(regex, response, re.DOTALL)
         if match:
-            return match.group(1).strip()
+            if match.lastindex:
+                group = match.group(1)
+                return group.strip() if group is not None else None
+            return match.group(0).strip()
 
     # Try to extract from code blocks
     match = re.search(r"```(?:sql)?\s*\n?(.*?)\n?\s*```", response, re.DOTALL)
@@ -78,4 +81,4 @@ def parse_free_text(response: str, regex: str | None = None) -> str | None:
 
 def parse_sql(response: str) -> str | None:
     """Parse SQL from teacher output. Specialized version of parse_free_text."""
-    return parse_free_text(response, regex=r"(?:```sql\s*\n?(.*?)\n?\s*```|(?:SELECT|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP)\b.*?;)")
+    return parse_free_text(response, regex=r"(?i)(?:```sql\s*\n?(.*?)\n?\s*```|(?:SELECT|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP)\b.*?;)")

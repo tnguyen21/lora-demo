@@ -20,16 +20,16 @@ Route incoming customer support tickets to the correct team. This is the **live 
 
 ```bash
 # 1. Generate training data (requires TINKER_API_KEY)
-python use_cases/text/01_ticket_routing/create_data.py
+uv run use_cases/text/01_ticket_routing/create_data.py
 
 # 2. Fine-tune the student model
-python use_cases/text/01_ticket_routing/train.py
+uv run use_cases/text/01_ticket_routing/train.py
 
 # 3. Evaluate (optionally pass --checkpoint for fine-tuned model)
-python use_cases/text/01_ticket_routing/eval.py --checkpoint "tinker://<run-id>/sampler_weights/final"
+uv run use_cases/text/01_ticket_routing/eval.py --checkpoint "tinker://<run-id>/sampler_weights/final"
 
 # 4. View cost comparison (no API key needed)
-python use_cases/text/01_ticket_routing/cost_comparison.py
+uv run use_cases/text/01_ticket_routing/cost_comparison.py
 ```
 
 ## Files

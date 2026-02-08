@@ -21,16 +21,16 @@ Classify scanned document images into document types. This is the **vision live 
 
 ```bash
 # 1. Generate training data (requires images + TINKER_API_KEY)
-python use_cases/vision/01_document_type/create_data.py
+uv run use_cases/vision/01_document_type/create_data.py
 
 # 2. Fine-tune the VLM student model
-python use_cases/vision/01_document_type/train.py
+uv run use_cases/vision/01_document_type/train.py
 
 # 3. Evaluate
-python use_cases/vision/01_document_type/eval.py --checkpoint "tinker://<run-id>/sampler_weights/final"
+uv run use_cases/vision/01_document_type/eval.py --checkpoint "tinker://<run-id>/sampler_weights/final"
 
 # 4. View cost comparison (no API key needed)
-python use_cases/vision/01_document_type/cost_comparison.py
+uv run use_cases/vision/01_document_type/cost_comparison.py
 ```
 
 ## Files

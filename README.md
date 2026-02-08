@@ -360,7 +360,7 @@ The repo includes 6 fully-worked use cases, each with data generation, training,
 
 - [Failure Modes & Debugging](docs/FAILURE_MODES.md) — common training failures + fixes
 - [Deployment Guide](docs/DEPLOYMENT.md) — how to serve fine-tuned models in production
-- Run `python scripts/generate_summary_table.py` to see cost comparisons across all 6 use cases
+- Run `uv run scripts/generate_summary_table.py` to see cost comparisons across all 6 use cases
 
 # Cost Comparison Summary — All Use Cases
 

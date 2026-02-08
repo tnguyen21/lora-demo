@@ -10,6 +10,7 @@ Follows the SamplingClientEvaluator pattern from vlm_classifier/eval.py.
 
 import asyncio
 import json
+import re
 
 import tinker
 from tqdm.asyncio import tqdm_asyncio
@@ -19,7 +20,15 @@ from tinker_cookbook.tokenizer_utils import get_tokenizer
 
 from shared.config import UseCaseConfig
 from shared.data_utils import load_jsonl
-from shared.output_parsers import parse_json_output, parse_single_label
+from shared.output_parsers import parse_json_output, parse_single_label, parse_sql
+
+try:
+    import sqlglot  # type: ignore
+
+    _HAS_SQLGLOT = True
+except Exception:
+    sqlglot = None
+    _HAS_SQLGLOT = False
 
 
 COMPARISON_MODELS = {
@@ -37,6 +46,21 @@ SMALLER_API_MODEL = {
     "renderer": "qwen3",
     "uses_teacher_prompt": True,
 }
+
+
+def _normalize_sql(text: str) -> str | None:
+    parsed = parse_sql(text)
+    if not parsed:
+        return None
+    cleaned = parsed.strip().rstrip(";")
+    if _HAS_SQLGLOT:
+        try:
+            expression = sqlglot.parse_one(cleaned, read="postgres")
+            cleaned = expression.sql(dialect="postgres", pretty=False)
+        except Exception:
+            pass
+    cleaned = re.sub(r"\s+", " ", cleaned)
+    return cleaned.lower()
 
 
 async def _evaluate_model(
@@ -96,7 +120,12 @@ async def _evaluate_model(
                 correct = float(predicted == expected_parsed) if predicted else 0.0
                 return {"accuracy": correct}
             else:
-                # free_text: exact match
+                # free_text: exact match, SQL gets normalized comparison
+                if config.name == "sql_generation":
+                    predicted = _normalize_sql(response)
+                    expected_norm = _normalize_sql(expected)
+                    correct = float(predicted == expected_norm) if predicted and expected_norm else 0.0
+                    return {"accuracy": correct}
                 predicted = response.strip()
                 correct = float(predicted.lower() == expected.strip().lower())
                 return {"accuracy": correct}

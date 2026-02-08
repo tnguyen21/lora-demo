@@ -18,16 +18,16 @@ Extract structured data from receipt images. The model outputs a JSON object wit
 
 ```bash
 # 1. Generate training data (requires receipt images + TINKER_API_KEY)
-python use_cases/vision/02_receipt_extraction/create_data.py
+uv run use_cases/vision/02_receipt_extraction/create_data.py
 
 # 2. Fine-tune the VLM student model
-python use_cases/vision/02_receipt_extraction/train.py
+uv run use_cases/vision/02_receipt_extraction/train.py
 
 # 3. Evaluate
-python use_cases/vision/02_receipt_extraction/eval.py --checkpoint "tinker://<run-id>/sampler_weights/final"
+uv run use_cases/vision/02_receipt_extraction/eval.py --checkpoint "tinker://<run-id>/sampler_weights/final"
 
 # 4. View cost comparison (no API key needed)
-python use_cases/vision/02_receipt_extraction/cost_comparison.py
+uv run use_cases/vision/02_receipt_extraction/cost_comparison.py
 ```
 
 ## Files

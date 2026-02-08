@@ -113,6 +113,9 @@ CONFIG = UseCaseConfig(
     teacher_prompt=TEACHER_PROMPT,
     output_format="free_text",
     output_regex=None,
+    renderer_name="gpt_oss_medium_reasoning",
+    teacher_model="openai/gpt-oss-120b",
+    student_model="openai/gpt-oss-120b",
     teacher_input_tokens=800,
     student_input_tokens=80,
     teacher_output_tokens=60,
@@ -120,4 +123,5 @@ CONFIG = UseCaseConfig(
     synthetic_examples=1000,
     eval_samples=200,
     synthetic_input_templates=SYNTHETIC_TEMPLATES,
+    teacher_temperature=0.0,
 )

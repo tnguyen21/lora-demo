@@ -31,16 +31,16 @@ Extract structured sentiment analysis from product reviews. Given a review, the 
 
 ```bash
 # 1. Generate training data (requires TINKER_API_KEY)
-python use_cases/text/04_sentiment_aspect/create_data.py
+uv run use_cases/text/04_sentiment_aspect/create_data.py
 
 # 2. Fine-tune the student model
-python use_cases/text/04_sentiment_aspect/train.py
+uv run use_cases/text/04_sentiment_aspect/train.py
 
 # 3. Evaluate (optionally pass --checkpoint for fine-tuned model)
-python use_cases/text/04_sentiment_aspect/eval.py --checkpoint "tinker://<run-id>/sampler_weights/final"
+uv run use_cases/text/04_sentiment_aspect/eval.py --checkpoint "tinker://<run-id>/sampler_weights/final"
 
 # 4. View cost comparison (no API key needed)
-python use_cases/text/04_sentiment_aspect/cost_comparison.py
+uv run use_cases/text/04_sentiment_aspect/cost_comparison.py
 ```
 
 ## Files

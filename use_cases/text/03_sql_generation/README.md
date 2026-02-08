@@ -31,16 +31,16 @@ order_items (id, order_id, product_id, quantity, unit_price)
 
 ```bash
 # 1. Generate training data (requires TINKER_API_KEY)
-python use_cases/text/03_sql_generation/create_data.py
+uv run use_cases/text/03_sql_generation/create_data.py
 
 # 2. Fine-tune the student model
-python use_cases/text/03_sql_generation/train.py
+uv run use_cases/text/03_sql_generation/train.py
 
 # 3. Evaluate (optionally pass --checkpoint for fine-tuned model)
-python use_cases/text/03_sql_generation/eval.py --checkpoint "tinker://<run-id>/sampler_weights/final"
+uv run use_cases/text/03_sql_generation/eval.py --checkpoint "tinker://<run-id>/sampler_weights/final"
 
 # 4. View cost comparison (no API key needed)
-python use_cases/text/03_sql_generation/cost_comparison.py
+uv run use_cases/text/03_sql_generation/cost_comparison.py
 ```
 
 ## Files
