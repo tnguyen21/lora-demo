@@ -9,7 +9,6 @@
 Large language models (GPT-4o, Claude Sonnet, Gemini Pro) can one-shot most narrow tasks — classification, extraction, routing, formatting. But at scale, the math doesn't work:
 
 - **Token costs compound fast.** A detailed classification prompt is ~500 tokens input per request. At 1M requests/day, that's real money.
-- **Latency adds up.** Large model API calls are 500ms-2s. A fine-tuned small model can be 10-50ms.
 - **You're paying for capabilities you don't need.** A 70B+ parameter model doing binary classification is like hiring a PhD to sort mail.
 
 The alternative: **treat small fine-tuned models as "fuzzy decision trees."** They learn the decision boundary from examples, handle edge cases better than rule-based systems, and run at a fraction of the cost.
