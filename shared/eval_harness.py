@@ -12,10 +12,11 @@ import json
 import re
 
 import tinker
-from tqdm.asyncio import tqdm_asyncio
 
 from tinker_cookbook import renderers
 from tinker_cookbook.tokenizer_utils import get_tokenizer
+
+from shared.teacher import _setup_anthropic_client
 
 from shared.config import UseCaseConfig
 from shared.data_utils import load_jsonl
@@ -43,6 +44,32 @@ def _normalize_sql(text: str) -> str | None:
             pass
     cleaned = re.sub(r"\s+", " ", cleaned)
     return cleaned.lower()
+
+
+def _score_response(response: str, expected: str, config: UseCaseConfig) -> float:
+    """Score a single response against expected output. Returns 0.0 or 1.0."""
+    if config.output_format == "single_label":
+        predicted = parse_single_label(response, config.labels, config.output_regex)
+        expected_parsed = expected.strip().lower()
+        return float(predicted == expected_parsed) if predicted else 0.0
+    elif config.output_format == "json":
+        predicted = parse_json_output(response)
+        expected_parsed = json.loads(expected)
+        if predicted is None:
+            return 0.0
+        # Set-based comparison for JSON arrays (e.g. PII entities) — order shouldn't matter
+        if isinstance(predicted, list) and isinstance(expected_parsed, list):
+            predicted_set = {json.dumps(item, sort_keys=True) for item in predicted}
+            expected_set = {json.dumps(item, sort_keys=True) for item in expected_parsed}
+            return float(predicted_set == expected_set)
+        return float(predicted == expected_parsed)
+    else:
+        if config.name == "sql_generation":
+            predicted = _normalize_sql(response)
+            expected_norm = _normalize_sql(expected)
+            return float(predicted == expected_norm) if predicted and expected_norm else 0.0
+        predicted = response.strip()
+        return float(predicted.lower() == expected.strip().lower())
 
 
 async def _evaluate_model(
@@ -90,31 +117,47 @@ async def _evaluate_model(
 
             result = await sampling_client.sample_async(prompt=tokenized, sampling_params=params, num_samples=1)
             response = tokenizer.decode(result.sequences[0].tokens)
-
-            if config.output_format == "single_label":
-                predicted = parse_single_label(response, config.labels, config.output_regex)
-                expected_parsed = expected.strip().lower()
-                correct = float(predicted == expected_parsed) if predicted else 0.0
-                return {"accuracy": correct}
-            elif config.output_format == "json":
-                predicted = parse_json_output(response)
-                expected_parsed = json.loads(expected)
-                correct = float(predicted == expected_parsed) if predicted else 0.0
-                return {"accuracy": correct}
-            else:
-                # free_text: exact match, SQL gets normalized comparison
-                if config.name == "sql_generation":
-                    predicted = _normalize_sql(response)
-                    expected_norm = _normalize_sql(expected)
-                    correct = float(predicted == expected_norm) if predicted and expected_norm else 0.0
-                    return {"accuracy": correct}
-                predicted = response.strip()
-                correct = float(predicted.lower() == expected.strip().lower())
-                return {"accuracy": correct}
+            return {"accuracy": _score_response(response, expected, config)}
 
     tasks = [asyncio.create_task(eval_one(ex)) for ex in test_data]
     results = []
-    for coro in tqdm_asyncio.as_completed(tasks, total=len(tasks)):
+    for coro in asyncio.as_completed(tasks):
+        result = await coro
+        results.append(result)
+
+    if not results:
+        return {"accuracy": 0.0}
+
+    avg_accuracy = sum(r["accuracy"] for r in results) / len(results)
+    return {"accuracy": avg_accuracy, "n_examples": float(len(results))}
+
+
+async def _evaluate_teacher_anthropic(
+    config: UseCaseConfig,
+    test_data: list[dict],
+    max_parallel: int = 10,
+) -> dict[str, float]:
+    """Evaluate the Anthropic teacher model on test data."""
+    client = _setup_anthropic_client()
+    semaphore = asyncio.Semaphore(max_parallel)
+
+    async def eval_one(example: dict) -> dict[str, float]:
+        user_input = example["messages"][0]["content"]
+        expected = example["messages"][1]["content"]
+        prompt_text = config.teacher_prompt.format(input=user_input)
+        async with semaphore:
+            message = await client.messages.create(
+                model=config.teacher_api_model,
+                max_tokens=config.teacher_max_tokens,
+                temperature=0.0,
+                messages=[{"role": "user", "content": prompt_text}],
+            )
+        response = message.content[0].text
+        return {"accuracy": _score_response(response, expected, config)}
+
+    tasks = [asyncio.create_task(eval_one(ex)) for ex in test_data]
+    results = []
+    for coro in asyncio.as_completed(tasks):
         result = await coro
         results.append(result)
 
@@ -149,20 +192,20 @@ async def run_comparison_eval(
     results = {}
 
     # 1. Teacher model with full prompt
-    print(f"\nEvaluating: Teacher ({config.teacher_model} + full prompt)")
-    teacher_metrics = await _evaluate_model(
-        config=config,
-        test_data=test_data,
-        model_name=config.teacher_model,
-        renderer_name=config.renderer_name,
-        uses_teacher_prompt=True,
-    )
+    if config.teacher_provider == "anthropic":
+        teacher_metrics = await _evaluate_teacher_anthropic(config=config, test_data=test_data)
+    else:
+        teacher_metrics = await _evaluate_model(
+            config=config,
+            test_data=test_data,
+            model_name=config.teacher_model,
+            renderer_name=config.renderer_name,
+            uses_teacher_prompt=True,
+        )
     results["teacher"] = teacher_metrics
-    print(f"  Accuracy: {teacher_metrics['accuracy']:.3f}")
 
     # 2. Fine-tuned student (no prompt)
     if checkpoint_path:
-        print("\nEvaluating: Fine-tuned student (checkpoint, raw input only)")
         student_metrics = await _evaluate_model(
             config=config,
             test_data=test_data,
@@ -172,9 +215,6 @@ async def run_comparison_eval(
             model_path=checkpoint_path,
         )
         results["fine_tuned"] = student_metrics
-        print(f"  Accuracy: {student_metrics['accuracy']:.3f}")
-    else:
-        print("\nSkipping fine-tuned model eval (no checkpoint_path provided)")
 
     # Print comparison table
     print("\n" + "=" * 60)
