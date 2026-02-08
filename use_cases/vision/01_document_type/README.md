@@ -38,6 +38,6 @@ uv run use_cases/vision/01_document_type/cost_comparison.py
 - `config.py` — Task-specific config: labels, VLM teacher prompt, token estimates
 - `create_data.py` — Generate training data via VLM teacher model
 - `train.py` — Fine-tune VLM student model with LoRA
-- `eval.py` — 3-model comparison evaluation
+- `eval.py` — 2-model comparison evaluation
 - `cost_comparison.py` — Cost analysis across model tiers
 - `sample_data/` — Pre-generated examples and cost report

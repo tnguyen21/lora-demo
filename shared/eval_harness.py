@@ -1,9 +1,8 @@
-"""3-model comparison evaluator.
+"""2-model comparison evaluator.
 
-Evaluates held-out test data across three model tiers:
-1. Strong API model — teacher model with full prompt
-2. Smaller/cheaper API model — same full prompt, smaller model
-3. Fine-tuned student — LoRA checkpoint, raw input only (no prompt)
+Evaluates held-out test data across two model tiers:
+1. Teacher model — strong API model with full prompt
+2. Fine-tuned student — LoRA checkpoint, raw input only (no prompt)
 
 Follows the SamplingClientEvaluator pattern from vlm_classifier/eval.py.
 """
@@ -29,23 +28,6 @@ try:
 except Exception:
     sqlglot = None
     _HAS_SQLGLOT = False
-
-
-COMPARISON_MODELS = {
-    "strong_api": {
-        "display_name": "Teacher (Qwen3-30B-A3B + full prompt)",
-        "model": "Qwen/Qwen3-30B-A3B",
-        "renderer": "qwen3",
-        "uses_teacher_prompt": True,
-    },
-}
-
-SMALLER_API_MODEL = {
-    "display_name": "Smaller API (Qwen3-30B-A3B + full prompt)",
-    "model": "Qwen/Qwen3-30B-A3B",
-    "renderer": "qwen3",
-    "uses_teacher_prompt": True,
-}
 
 
 def _normalize_sql(text: str) -> str | None:
@@ -149,7 +131,7 @@ async def run_comparison_eval(
     checkpoint_path: str | None = None,
     max_eval: int | None = None,
 ) -> dict[str, dict[str, float]]:
-    """Run 3-model comparison evaluation.
+    """Run 2-model comparison evaluation.
 
     Args:
         config: Use case config.
@@ -178,19 +160,7 @@ async def run_comparison_eval(
     results["teacher"] = teacher_metrics
     print(f"  Accuracy: {teacher_metrics['accuracy']:.3f}")
 
-    # 2. Smaller API model with full prompt
-    print(f"\nEvaluating: Smaller API ({config.teacher_model} + full prompt)")
-    smaller_metrics = await _evaluate_model(
-        config=config,
-        test_data=test_data,
-        model_name=config.teacher_model,
-        renderer_name=config.renderer_name,
-        uses_teacher_prompt=True,
-    )
-    results["smaller_api"] = smaller_metrics
-    print(f"  Accuracy: {smaller_metrics['accuracy']:.3f}")
-
-    # 3. Fine-tuned student (no prompt)
+    # 2. Fine-tuned student (no prompt)
     if checkpoint_path:
         print("\nEvaluating: Fine-tuned student (checkpoint, raw input only)")
         student_metrics = await _evaluate_model(

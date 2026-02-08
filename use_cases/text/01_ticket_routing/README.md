@@ -37,6 +37,6 @@ uv run use_cases/text/01_ticket_routing/cost_comparison.py
 - `config.py` — Task-specific config: labels, teacher prompt, token estimates, synthetic templates
 - `create_data.py` — Generate training data via teacher model
 - `train.py` — Fine-tune student model with LoRA
-- `eval.py` — 3-model comparison evaluation
+- `eval.py` — 2-model comparison evaluation
 - `cost_comparison.py` — Cost analysis across model tiers
 - `sample_data/` — Pre-generated examples and cost report

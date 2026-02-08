@@ -36,6 +36,6 @@ uv run use_cases/text/02_pii_detection/cost_comparison.py
 - `config.py` — Task-specific config: PII labels, teacher prompt with detection rubric, token estimates, synthetic templates
 - `create_data.py` — Generate training data via teacher model
 - `train.py` — Fine-tune student model with LoRA
-- `eval.py` — 3-model comparison evaluation
+- `eval.py` — 2-model comparison evaluation
 - `cost_comparison.py` — Cost analysis across model tiers
 - `sample_data/` — Pre-generated examples for reference
