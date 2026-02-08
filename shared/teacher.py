@@ -65,6 +65,11 @@ def _parse_teacher_response(response: str, config: UseCaseConfig) -> str | None:
 
 def _setup_anthropic_client() -> anthropic.AsyncAnthropic:
     """Create an async Anthropic client (reads ANTHROPIC_API_KEY from env)."""
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        raise RuntimeError(
+            "ANTHROPIC_API_KEY environment variable is not set. "
+            "Set it or use teacher_provider='tinker' in your config."
+        )
     return anthropic.AsyncAnthropic()
 
 
