@@ -402,7 +402,7 @@ Computing gradients on the _entire_ dataset per step is expensive.
 ```
   Full dataset (2000 examples)
   ┌──────────────────────────────────────────────────┐
-  │ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ │ ← gradient on ALL of these? slow!
+  │ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   │ ← gradient on ALL of these? slow!
   └──────────────────────────────────────────────────┘
 
   SGD: pick a random batch, compute gradient on just that
