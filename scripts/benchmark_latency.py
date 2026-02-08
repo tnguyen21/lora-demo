@@ -1,9 +1,9 @@
 """Benchmark inference latency for teacher vs fine-tuned student models.
 
-Measures wall-clock time per request using sequential requests for clean
-per-request latency numbers. Reports p50, p95, and mean latency.
+Teacher: Anthropic API (frontier model + full prompt) — includes network round-trip.
+Student: Tinker (self-hosted LoRA checkpoint, raw input only) — local GPU inference.
 
-Requires a Tinker API connection. Without a checkpoint, benchmarks teacher only.
+Reports p50, p95, and mean latency per request.
 
 Usage:
     python scripts/benchmark_latency.py use_cases/text/01_ticket_routing
@@ -12,6 +12,7 @@ Usage:
 """
 
 import argparse
+import asyncio
 import statistics
 import sys
 import time
@@ -25,17 +26,17 @@ from tinker_cookbook.tokenizer_utils import get_tokenizer
 
 from shared.config import UseCaseConfig
 from shared.data_utils import load_jsonl
+from shared.teacher import _setup_anthropic_client
 
 
-def benchmark_model(
+def benchmark_student(
     config: UseCaseConfig,
     samples: list[dict],
     sampling_client: tinker.SamplingClient,
     tokenizer,
     renderer,
-    uses_teacher_prompt: bool,
 ) -> list[float]:
-    """Run sequential requests and return per-request latencies in ms."""
+    """Run sequential Tinker requests and return per-request latencies in ms."""
     params = tinker.SamplingParams(
         max_tokens=config.teacher_max_tokens,
         temperature=0.0,
@@ -45,16 +46,37 @@ def benchmark_model(
     latencies: list[float] = []
     for i, example in enumerate(samples):
         user_input = example["messages"][0]["content"]
-
-        if uses_teacher_prompt:
-            prompt_text = config.teacher_prompt.format(input=user_input)
-            tokenized = tinker.ModelInput.from_ints(tokenizer.encode(prompt_text))
-        else:
-            messages = [{"role": "user", "content": user_input}]
-            tokenized = renderer.build_generation_prompt(messages)
+        messages = [{"role": "user", "content": user_input}]
+        tokenized = renderer.build_generation_prompt(messages)
 
         start = time.perf_counter()
         sampling_client.sample(prompt=tokenized, sampling_params=params, num_samples=1).result()
+        elapsed_ms = (time.perf_counter() - start) * 1000
+        latencies.append(elapsed_ms)
+        print(f"  [{i + 1}/{len(samples)}] {elapsed_ms:.1f}ms")
+
+    return latencies
+
+
+async def benchmark_teacher(
+    config: UseCaseConfig,
+    samples: list[dict],
+) -> list[float]:
+    """Run sequential Anthropic API requests and return per-request latencies in ms."""
+    client = _setup_anthropic_client()
+
+    latencies: list[float] = []
+    for i, example in enumerate(samples):
+        user_input = example["messages"][0]["content"]
+        prompt_text = config.teacher_prompt.format(input=user_input)
+
+        start = time.perf_counter()
+        await client.messages.create(
+            model=config.teacher_model,
+            max_tokens=config.teacher_max_tokens,
+            temperature=0.0,
+            messages=[{"role": "user", "content": prompt_text}],
+        )
         elapsed_ms = (time.perf_counter() - start) * 1000
         latencies.append(elapsed_ms)
         print(f"  [{i + 1}/{len(samples)}] {elapsed_ms:.1f}ms")
@@ -113,23 +135,20 @@ def main():
     samples = all_samples[: args.num_requests]
     print(f"Benchmarking {len(samples)} requests for: {config.display_name}")
 
-    # Setup Tinker client
-    service_client = tinker.ServiceClient()
-    tokenizer = get_tokenizer(config.teacher_model)
-    renderer = renderers.get_renderer(config.renderer_name, tokenizer)
-
-    # Benchmark teacher
-    print(f"\n--- Teacher ({config.teacher_model} + full prompt) ---")
-    teacher_client = service_client.create_sampling_client(base_model=config.teacher_model)
-    teacher_latencies = benchmark_model(config, samples, teacher_client, tokenizer, renderer, uses_teacher_prompt=True)
+    # Benchmark teacher (Anthropic API)
+    print(f"\n--- Teacher ({config.teacher_model} + full prompt, API) ---")
+    teacher_latencies = asyncio.run(benchmark_teacher(config, samples))
     teacher_p50 = print_stats("Teacher", teacher_latencies)
 
     # Benchmark student (if checkpoint provided)
     student_p50 = None
     if args.checkpoint:
-        print("\n--- Student (checkpoint, no prompt) ---")
+        print(f"\n--- Student ({config.student_model}, checkpoint, no prompt) ---")
+        service_client = tinker.ServiceClient()
+        tokenizer = get_tokenizer(config.student_model)
+        renderer = renderers.get_renderer(config.renderer_name, tokenizer)
         student_client = service_client.create_sampling_client(model_path=args.checkpoint)
-        student_latencies = benchmark_model(config, samples, student_client, tokenizer, renderer, uses_teacher_prompt=False)
+        student_latencies = benchmark_student(config, samples, student_client, tokenizer, renderer)
         student_p50 = print_stats("Fine-tuned student", student_latencies)
     else:
         print("\nSkipping student benchmark (no --checkpoint provided)")
@@ -139,9 +158,9 @@ def main():
     print("SUMMARY")
     print("=" * 50)
     if teacher_p50 is not None:
-        print(f"Teacher p50:         ~{teacher_p50:.0f}ms")
+        print(f"Teacher p50:         ~{teacher_p50:.0f}ms  (API, includes network)")
     if student_p50 is not None:
-        print(f"Student p50:         ~{student_p50:.0f}ms")
+        print(f"Student p50:         ~{student_p50:.0f}ms  (self-hosted)")
         if teacher_p50 and student_p50:
             speedup = teacher_p50 / student_p50
             print(f"Speedup:             ~{speedup:.1f}x")

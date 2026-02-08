@@ -1,7 +1,7 @@
 """Async teacher prompting for data generation.
 
-Follows the pattern from tinker_cookbook/recipes/prompt_distillation/create_data.py:
-uses sampling_client.sample_async() with tqdm_asyncio.as_completed.
+Text use cases: teacher labels via the Anthropic messages API (frontier model).
+Vision use cases: teacher labels via Tinker (self-hosted VLM).
 """
 
 import asyncio
@@ -18,18 +18,6 @@ from tinker_cookbook.tokenizer_utils import get_tokenizer
 
 from shared.config import UseCaseConfig, VisionUseCaseConfig
 from shared.output_parsers import parse_json_output, parse_single_label
-
-
-def setup_text_clients(config: UseCaseConfig):
-    """Create service client, sampling client, tokenizer, and renderer for text tasks."""
-    os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
-    service_client = tinker.ServiceClient()
-    sampling_client = service_client.create_sampling_client(base_model=config.teacher_model)
-    tokenizer = get_tokenizer(config.teacher_model)
-    renderer = renderers.get_renderer(config.renderer_name, tokenizer)
-
-    return sampling_client, tokenizer, renderer
 
 
 def setup_vision_clients(config: VisionUseCaseConfig):
@@ -66,18 +54,25 @@ def _parse_teacher_response(response: str, config: UseCaseConfig) -> str | None:
 def _setup_anthropic_client() -> anthropic.AsyncAnthropic:
     """Create an async Anthropic client (reads ANTHROPIC_API_KEY from env)."""
     if not os.environ.get("ANTHROPIC_API_KEY"):
-        raise RuntimeError(
-            "ANTHROPIC_API_KEY environment variable is not set. "
-            "Set it or use teacher_provider='tinker' in your config."
-        )
+        raise RuntimeError("ANTHROPIC_API_KEY environment variable is not set.")
     return anthropic.AsyncAnthropic()
 
 
-async def _generate_teacher_labels_anthropic(
+async def generate_teacher_labels(
     config: UseCaseConfig,
     inputs: list[str],
+    output_path: str,
 ) -> list[dict]:
-    """Generate teacher labels via the Anthropic messages API."""
+    """Generate teacher labels for text inputs via the Anthropic API.
+
+    Args:
+        config: Use case configuration with teacher prompt and model settings.
+        inputs: List of raw text inputs to label.
+        output_path: Path to write the JSONL training data.
+
+    Returns:
+        List of {input, output} dicts for all successfully labeled examples.
+    """
     client = _setup_anthropic_client()
     semaphore = asyncio.Semaphore(10)
 
@@ -85,7 +80,7 @@ async def _generate_teacher_labels_anthropic(
         prompt_text = config.teacher_prompt.format(input=text)
         async with semaphore:
             message = await client.messages.create(
-                model=config.teacher_api_model,
+                model=config.teacher_model,
                 max_tokens=config.teacher_max_tokens,
                 temperature=config.teacher_temperature,
                 messages=[{"role": "user", "content": prompt_text}],
@@ -99,57 +94,6 @@ async def _generate_teacher_labels_anthropic(
         text, label = await coro
         if label is not None:
             results.append({"input": text, "output": label})
-    return results
-
-
-async def _generate_teacher_labels_tinker(
-    config: UseCaseConfig,
-    inputs: list[str],
-) -> list[dict]:
-    """Generate teacher labels via Tinker (self-hosted Qwen)."""
-    sampling_client, tokenizer, renderer = setup_text_clients(config)
-
-    params = tinker.SamplingParams(
-        max_tokens=config.teacher_max_tokens,
-        temperature=config.teacher_temperature,
-        stop=renderer.get_stop_sequences(),
-    )
-
-    async def sample_one(text: str) -> tuple[str, str | None]:
-        prompt_text = config.teacher_prompt.format(input=text)
-        tokenized = tinker.ModelInput.from_ints(tokenizer.encode(prompt_text))
-        result = await sampling_client.sample_async(prompt=tokenized, sampling_params=params, num_samples=1)
-        response = tokenizer.decode(result.sequences[0].tokens)
-        parsed = _parse_teacher_response(response, config)
-        return (text, parsed)
-
-    results = []
-    for coro in tqdm_asyncio.as_completed([sample_one(inp) for inp in inputs], total=len(inputs)):
-        text, label = await coro
-        if label is not None:
-            results.append({"input": text, "output": label})
-    return results
-
-
-async def generate_teacher_labels(
-    config: UseCaseConfig,
-    inputs: list[str],
-    output_path: str,
-) -> list[dict]:
-    """Generate teacher labels for text inputs using async sampling.
-
-    Args:
-        config: Use case configuration with teacher prompt and model settings.
-        inputs: List of raw text inputs to label.
-        output_path: Path to write the JSONL training data.
-
-    Returns:
-        List of {input, output} dicts for all successfully labeled examples.
-    """
-    if config.teacher_provider == "anthropic":
-        results = await _generate_teacher_labels_anthropic(config, inputs)
-    else:
-        results = await _generate_teacher_labels_tinker(config, inputs)
 
     # Save as JSONL in short message format (no teacher prompt)
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)

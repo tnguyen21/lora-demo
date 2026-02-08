@@ -147,7 +147,7 @@ async def _evaluate_teacher_anthropic(
         prompt_text = config.teacher_prompt.format(input=user_input)
         async with semaphore:
             message = await client.messages.create(
-                model=config.teacher_api_model,
+                model=config.teacher_model,
                 max_tokens=config.teacher_max_tokens,
                 temperature=0.0,
                 messages=[{"role": "user", "content": prompt_text}],
@@ -191,17 +191,8 @@ async def run_comparison_eval(
 
     results = {}
 
-    # 1. Teacher model with full prompt
-    if config.teacher_provider == "anthropic":
-        teacher_metrics = await _evaluate_teacher_anthropic(config=config, test_data=test_data)
-    else:
-        teacher_metrics = await _evaluate_model(
-            config=config,
-            test_data=test_data,
-            model_name=config.teacher_model,
-            renderer_name=config.renderer_name,
-            uses_teacher_prompt=True,
-        )
+    # 1. Teacher model (frontier API) with full prompt
+    teacher_metrics = await _evaluate_teacher_anthropic(config=config, test_data=test_data)
     results["teacher"] = teacher_metrics
 
     # 2. Fine-tuned student (no prompt)

@@ -22,7 +22,8 @@ class TestConfig:
             teacher_prompt="Classify: {input}",
             output_format="single_label",
         )
-        assert cfg.teacher_model == "Qwen/Qwen3-30B-A3B"
+        assert cfg.teacher_model == "claude-sonnet-4-5-20250929"
+        assert cfg.student_model == "Qwen/Qwen3-30B-A3B"
         assert cfg.learning_rate == 1e-4
         assert cfg.num_epochs == 4
         assert cfg.lora_rank == 32

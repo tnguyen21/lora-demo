@@ -17,11 +17,9 @@ class UseCaseConfig:
     output_regex: str | None = None  # regex to parse teacher output
 
     # model settings
-    teacher_provider: Literal["tinker", "anthropic"] = "anthropic"
-    teacher_api_model: str = "claude-sonnet-4-5-20250929"
-    teacher_model: str = "Qwen/Qwen3-30B-A3B"
-    student_model: str = "Qwen/Qwen3-30B-A3B"
-    renderer_name: str = "qwen3"
+    teacher_model: str = "claude-sonnet-4-5-20250929"  # frontier API model for labeling
+    student_model: str = "Qwen/Qwen3-30B-A3B"  # self-hosted model for fine-tuning
+    renderer_name: str = "qwen3"  # renderer for student model
 
     # training defaults
     learning_rate: float = 1e-4

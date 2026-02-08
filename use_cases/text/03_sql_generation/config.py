@@ -114,7 +114,6 @@ CONFIG = UseCaseConfig(
     output_format="free_text",
     output_regex=None,
     renderer_name="qwen3",
-    teacher_model="Qwen/Qwen3-30B-A3B",
     student_model="Qwen/Qwen3-30B-A3B",
     teacher_input_tokens=800,
     student_input_tokens=80,
