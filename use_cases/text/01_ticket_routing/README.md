@@ -39,4 +39,4 @@ uv run use_cases/text/01_ticket_routing/cost_comparison.py
 - `train.py` — Fine-tune student model with LoRA
 - `eval.py` — 2-model comparison evaluation
 - `cost_comparison.py` — Cost analysis across model tiers
-- `sample_data/` — Pre-generated examples and cost report
+- `cost_report.txt` — Cost report from data generation

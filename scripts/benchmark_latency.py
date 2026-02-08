@@ -102,13 +102,14 @@ def main():
     spec.loader.exec_module(mod)
     config: UseCaseConfig = mod.CONFIG
 
-    # Load sample data
-    sample_data_path = use_case_path / "sample_data" / "train_sample.jsonl"
-    if not sample_data_path.exists():
-        print(f"Error: sample data not found at {sample_data_path}")
+    # Load sample data — generate via create_data.py first
+    train_path = Path(f"/tmp/tinker-datasets/{config.name}.jsonl")
+    if not train_path.exists():
+        print(f"Error: training data not found at {train_path}")
+        print("Run create_data.py for this use case first.")
         sys.exit(1)
 
-    all_samples = load_jsonl(str(sample_data_path))
+    all_samples = load_jsonl(str(train_path))
     samples = all_samples[: args.num_requests]
     print(f"Benchmarking {len(samples)} requests for: {config.display_name}")
 

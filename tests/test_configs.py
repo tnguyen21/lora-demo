@@ -53,24 +53,6 @@ def test_config_token_estimates(use_case_dir, expected_category):
 
 
 @pytest.mark.parametrize("use_case_dir,expected_category", USE_CASES)
-def test_sample_data_exists(use_case_dir, expected_category):
-    sample_dir = REPO_ROOT / "use_cases" / use_case_dir / "sample_data"
-    assert sample_dir.exists(), f"sample_data/ directory missing for {use_case_dir}"
-    jsonl_files = list(sample_dir.glob("*.jsonl"))
-    assert len(jsonl_files) > 0, f"No JSONL sample files in {use_case_dir}/sample_data/"
-
-
-@pytest.mark.parametrize("use_case_dir,expected_category", USE_CASES)
-def test_sample_data_valid_jsonl(use_case_dir, expected_category):
-    import json
-
-    sample_path = REPO_ROOT / "use_cases" / use_case_dir / "sample_data" / "train_sample.jsonl"
-    with open(sample_path) as f:
-        lines = [line.strip() for line in f if line.strip()]
-    assert len(lines) >= 10, f"Expected at least 10 sample rows, got {len(lines)}"
-    for i, line in enumerate(lines):
-        record = json.loads(line)
-        assert "messages" in record, f"Line {i}: missing 'messages' key"
-        assert len(record["messages"]) == 2, f"Line {i}: expected 2 messages"
-        assert record["messages"][0]["role"] == "user"
-        assert record["messages"][1]["role"] == "assistant"
+def test_cost_report_exists(use_case_dir, expected_category):
+    cost_report = REPO_ROOT / "use_cases" / use_case_dir / "cost_report.txt"
+    assert cost_report.exists(), f"cost_report.txt missing for {use_case_dir}"
