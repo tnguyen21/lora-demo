@@ -62,6 +62,10 @@ def _score_response(response: str, expected: str, config: UseCaseConfig) -> floa
             predicted_set = {json.dumps(item, sort_keys=True) for item in predicted}
             expected_set = {json.dumps(item, sort_keys=True) for item in expected_parsed}
             return float(predicted_set == expected_set)
+        # For JSON dicts: compare only specified keys if configured
+        if isinstance(predicted, dict) and isinstance(expected_parsed, dict) and config.json_compare_keys:
+            predicted = {k: predicted.get(k) for k in config.json_compare_keys}
+            expected_parsed = {k: expected_parsed.get(k) for k in config.json_compare_keys}
         return float(predicted == expected_parsed)
     else:
         if config.name == "sql_generation":

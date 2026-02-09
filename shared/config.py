@@ -46,6 +46,9 @@ class UseCaseConfig:
     # synthetic input templates for data generation
     synthetic_input_templates: list[str] = field(default_factory=list)
 
+    # keys to compare for JSON output scoring (None = compare entire object)
+    json_compare_keys: list[str] | None = None
+
     # teacher sampling params
     teacher_temperature: float = 0.15
     teacher_max_tokens: int = 1000

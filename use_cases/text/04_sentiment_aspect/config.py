@@ -93,6 +93,7 @@ CONFIG = UseCaseConfig(
     teacher_prompt=TEACHER_PROMPT,
     output_format="json",
     output_regex=None,
+    json_compare_keys=["sentiment", "aspect"],
     teacher_input_tokens=450,
     student_input_tokens=60,
     teacher_output_tokens=40,
