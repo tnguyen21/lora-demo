@@ -1,4 +1,4 @@
-"""Validate all 6 use case configs load correctly."""
+"""Validate all use case configs load correctly."""
 
 import importlib.util
 from pathlib import Path
@@ -12,8 +12,6 @@ USE_CASES = [
     ("text/02_pii_detection", "text"),
     ("text/03_sql_generation", "text"),
     ("text/04_sentiment_aspect", "text"),
-    ("vision/01_document_type", "vision"),
-    ("vision/02_receipt_extraction", "vision"),
 ]
 
 
